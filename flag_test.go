@@ -24,3 +24,26 @@ func TestFlag(t *testing.T) {
 		}
 	}
 }
+
+func TestParseFlag(t *testing.T) {
+	test_data := []struct {
+		f Flag
+		n string
+	}{
+		{ FATAL, "fatal"},
+		{ ERROR, "ERROR"},
+		{ WARNING, "WARNING"},
+		{ WARNING, "Warn"},
+		{ NOTICE, "NOTICE"},
+		{ INFO, "INFO"},
+		{ DEBUG, "Debug"},
+		{ DEBUG, "debug"},
+		{ DEBUG, "DEBUG"},
+	}
+
+	for _, data := range test_data{
+		if data.f != ParseLevel(data.n) {
+			t.Errorf("%b %s != %s", data.f, data.n, data.f)
+		}
+	}
+}
