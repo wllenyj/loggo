@@ -1,11 +1,13 @@
 package loggo
 
-import ()
+import (
+	"os"
+)
 
 var (
 	default_logger LevelLogger
 
-	DefFormat = "%{time:01-02 15:04:05.9999} #%{pid}.%{gid} %{shortpkg}/%{shortfile}/%{callpath:3} %{color:bold}%{level:.4s}%{color:reset} %{message}"
+	DefFormat = "%{time:01-02 15:04:05.9999} %{color:bold}%{level:.4s}%{color:reset} #%{pid}.%{gid} %{shortpkg} %{shortfile}/%{shortfunc} %{message}"
 )
 
 func Debug(args ...interface{}) {
@@ -48,6 +50,6 @@ func GetDefaultLogger() LevelLogger {
 }
 
 func init() {
-	default_logger = NewLevelLogger(INFO, DefFormat)
+	default_logger = NewLevelLogger(INFO, os.Stdout, DefFormat)
 	//default_logger = NewFileLevelLogger(INFO,"debug.log", "%{time:01-02 15:04:05.9999} #%{pid}.%{gid} %{shortpkg}/%{shortfile}/%{callpath:3} %{color:bold}%{level:.4s}%{color:reset} %{message}")
 }

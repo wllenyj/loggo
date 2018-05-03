@@ -2,8 +2,8 @@ package loggo
 
 import (
 	"time"
-	"os"
 	"github.com/petermattis/goid"
+	"io"
 )
 
 type levelLogger struct {
@@ -11,7 +11,7 @@ type levelLogger struct {
 	
 	formatter Formatter 
 
-	writer stringWriter
+	writer io.Writer
 }
 
 func (lg *levelLogger) Debug(args ...interface{}) {
@@ -77,10 +77,10 @@ func (lg *levelLogger) log(level Flag, calldepth int, s *string, args ...interfa
 //	lg.level = level
 //}
 
-func NewLevelLogger(level Flag, fmt string) LevelLogger {
+func NewLevelLogger(level Flag, w io.Writer, fmt string) LevelLogger {
 	return &levelLogger {
 		level: level,
-		writer: os.Stdout,
+		writer: w,
 		formatter: MustStringFormatter(fmt),
 	}
 }
