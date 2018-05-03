@@ -15,7 +15,6 @@ func TestFlag(t *testing.T) {
 		{ NOTICE, "NOTICE"},
 		{ INFO, "INFO"},
 		{ DEBUG, "DEBUG"},
-		{ INFO|DEBUG, "INFO"},
 	}
 
 	for _, f := range flags {

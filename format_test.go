@@ -8,25 +8,25 @@ import (
 	"time"
 )
 
-func test(format Formatter, record *Record) string {
+func test(format Formatter, record *Record) []byte {
 	return test1(format, record)
 }
-func test1(format Formatter, record *Record) string {
+func test1(format Formatter, record *Record) []byte {
 	return test2(format, record)
 }
-func test2(format Formatter, record *Record) string {
+func test2(format Formatter, record *Record) []byte {
 	return test3(format, record)
 }
-func test3(format Formatter, record *Record) string {
+func test3(format Formatter, record *Record) []byte {
 	return test4(format, record)
 }
-func test4(format Formatter, record *Record) string {
+func test4(format Formatter, record *Record) []byte {
 	return test5(format, record)
 }
-func test5(format Formatter, record *Record) string {
+func test5(format Formatter, record *Record) []byte {
 	return test6(format, record)
 }
-func test6(format Formatter, record *Record) string {
+func test6(format Formatter, record *Record) []byte{
 	return FormatterProxy(format, 0, record)
 }
 
@@ -51,10 +51,10 @@ var (
 func TestFormater(t *testing.T) {
 	t.Parallel()
 	result := test(formater, testRecord[0])
-	if result != "04-27T19:22:01.407312 DEBUG format_test.go:30 test6 Hello,world!\n" {
+	if string(result) != "04-27T19:22:01.407312 DEBUG format_test.go:30 test6 Hello,world!\n" {
 		t.Fatalf("failt: %s", result)
 	}
-	t.Logf(result)
+	t.Logf(string(result))
 }
 
 func TestFormatter(t *testing.T) {
@@ -116,7 +116,7 @@ func TestParallel(t *testing.T) {
 	testfunc := func(t *testing.T) {
 		t.Parallel()
 		result := test(formater, testRecord[0])
-		if strings.Compare(result, "04-27T19:22:01.407312 DEBUG format_test.go:30 test6 Hello,world!\n") != 0{
+		if strings.Compare(string(result), "04-27T19:22:01.407312 DEBUG format_test.go:30 test6 Hello,world!\n") != 0{
 			t.Fatalf("failt: %x", result)
 		}
 	}

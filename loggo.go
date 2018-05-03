@@ -3,7 +3,7 @@ package loggo
 import ()
 
 var (
-	default_logger Logger
+	default_logger LevelLogger
 
 	DefFormat = "%{time:01-02 15:04:05.9999} #%{pid}.%{gid} %{shortpkg}/%{shortfile}/%{callpath:3} %{color:bold}%{level:.4s}%{color:reset} %{message}"
 )
@@ -39,8 +39,12 @@ func Fatalf(format string, args ...interface{}) {
 	default_logger.log(FATAL, 1, &format, args...)
 }
 
-func SetDefaultLogger(logger Logger) {
+func SetDefaultLogger(logger LevelLogger) {
 	default_logger = logger
+}
+
+func GetDefaultLogger() LevelLogger {
+	return default_logger
 }
 
 func init() {

@@ -107,11 +107,11 @@ type Formatter interface {
 	Format(calldepth int, r *Record, output stringWriter) error
 }
 
-func FormatterProxy(formatter Formatter, calldepth int, r *Record) string {
+func FormatterProxy(formatter Formatter, calldepth int, r *Record) []byte {
 	output := buffer_pool.Get().(*bytes.Buffer)
 	output.Reset()
 	formatter.Format(calldepth+1, r, output)
-	ret := output.String()
+	ret := output.Bytes()
 	buffer_pool.Put(output)
 	return ret
 	//return output.String()

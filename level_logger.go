@@ -46,7 +46,7 @@ func (lg *levelLogger) Fatalf(format string, args ...interface{}) {
 }
 
 func (lg *levelLogger) Output(calldepth int, s string) error {
-	lg.log(ALL, 1, &s, nil)
+	lg.log(UNKNOWN, calldepth, &s, nil)
 	return nil
 }
 
@@ -64,7 +64,7 @@ func (lg *levelLogger) log(level Flag, calldepth int, s *string, args ...interfa
 
 	str := FormatterProxy(lg.formatter, calldepth+1, r)
 	PutRecord(r)
-	lg.writer.WriteString(str)
+	lg.writer.Write(str)
 }
 
 //func (lg *levelLogger) SetFileWriter(filename string) {

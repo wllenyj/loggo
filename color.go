@@ -26,17 +26,21 @@ const (
 
 var (
 	colors = []string{
+		UNKNOWN: ColorSeq(ColorWhite),
 		FATAL:   ColorSeq(ColorMagenta),
 		ERROR:   ColorSeq(ColorRed),
 		WARNING: ColorSeq(ColorYellow),
 		NOTICE:  ColorSeq(ColorGreen),
+		INFO:	 ColorSeq(ColorBlue),
 		DEBUG:   ColorSeq(ColorCyan),
 	}
 	boldcolors = []string{
+		UNKNOWN: ColorSeqBold(ColorWhite),
 		FATAL:   ColorSeqBold(ColorMagenta),
 		ERROR:   ColorSeqBold(ColorRed),
 		WARNING: ColorSeqBold(ColorYellow),
 		NOTICE:  ColorSeqBold(ColorGreen),
+		INFO:	 ColorSeqBold(ColorBlue),
 		DEBUG:   ColorSeqBold(ColorCyan),
 	}
 )
