@@ -20,7 +20,7 @@ type FileWriter struct {
 	file     *os.File
 	closed   uint32
 
-	ch     chan string
+	ch     chan []byte
 	quit   chan chan error
 	reopen chan chan error
 }
@@ -29,7 +29,7 @@ func (fw *FileWriter) Write(b []byte) (int, error) {
 	if atomic.LoadUint32(&fw.closed) == 1 {
 		return 0, fmt.Errorf("closed")
 	}
-	fw.ch <- string(b)
+	fw.ch <- b
 	return len(b), nil
 }
 func (fw *FileWriter) WriteString(b string) (int, error) {
@@ -37,7 +37,7 @@ func (fw *FileWriter) WriteString(b string) (int, error) {
 		//fmt.Printf("use closed chan.\n")
 		return 0, fmt.Errorf("closed")
 	}
-	fw.ch <- b
+	fw.ch <- []byte(b)
 	return len(b), nil
 }
 
@@ -72,7 +72,7 @@ func NewFileWriter(filename string) *FileWriter {
 		file:     file,
 		bw:       bw,
 		closed:   0,
-		ch:       make(chan string, DEF_CHAN_LEN),
+		ch:       make(chan []byte, DEF_CHAN_LEN),
 		//quit:     make(chan struct{}),
 		quit:   make(chan chan error),
 		reopen: make(chan chan error),
@@ -103,7 +103,7 @@ func (fw *FileWriter) loop(syn chan struct{}) {
 			//if !ok {
 			//	goto END_FOR
 			//}
-			if _, err := fw.bw.WriteString(d); err != nil {
+			if _, err := fw.bw.Write(d); err != nil {
 				fmt.Printf("LOGGO ERROR log file write err. %v\n", err)
 			}
 		case quited := <-fw.quit:
@@ -112,7 +112,7 @@ func (fw *FileWriter) loop(syn chan struct{}) {
 			//fmt.Printf("quit lost %d\n", lost)
 			for i := 0; i < lost; i++ {
 				d := <-fw.ch
-				fw.bw.WriteString(d)
+				fw.bw.Write(d)
 			}
 			if err := fw.bw.Flush(); err != nil {
 				reterr = fmt.Errorf("LOGGO ERROR log file flush err. %v", err)

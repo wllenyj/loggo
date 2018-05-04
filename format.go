@@ -111,7 +111,7 @@ func FormatterProxy(formatter Formatter, calldepth int, r *Record) []byte {
 	output := buffer_pool.Get().(*bytes.Buffer)
 	output.Reset()
 	formatter.Format(calldepth+1, r, output)
-	ret := output.Bytes()
+	ret := append([]byte{}, output.Bytes()...)
 	buffer_pool.Put(output)
 	return ret
 	//return output.String()
@@ -336,7 +336,7 @@ func doFormatMessage(r *Record, output stringWriter) {
 		fmt.Fprintf(output, *r.fmt, r.args...)
 	} else {
 		fmt.Fprint(output, r.args...)
-	}	
+	}
 }
 
 // formatFuncName tries to extract certain part of the runtime formatted
