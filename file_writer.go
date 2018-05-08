@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -20,16 +21,26 @@ type FileWriter struct {
 	file     *os.File
 	closed   uint32
 
-	ch     chan []byte
+	ch     chan Buffer
 	quit   chan chan error
 	reopen chan chan error
+
+	putpool *sync.Pool 
+}
+
+func (fw *FileWriter) WriteBuffer(b Buffer) (int, error) {
+	if atomic.LoadUint32(&fw.closed) == 1 {
+		return 0, fmt.Errorf("closed")
+	}
+	fw.ch <- b
+	return b.Len(), nil
 }
 
 func (fw *FileWriter) Write(b []byte) (int, error) {
 	if atomic.LoadUint32(&fw.closed) == 1 {
 		return 0, fmt.Errorf("closed")
 	}
-	fw.ch <- b
+	fw.ch <- ByteWarp(b)
 	return len(b), nil
 }
 func (fw *FileWriter) WriteString(b string) (int, error) {
@@ -37,7 +48,7 @@ func (fw *FileWriter) WriteString(b string) (int, error) {
 		//fmt.Printf("use closed chan.\n")
 		return 0, fmt.Errorf("closed")
 	}
-	fw.ch <- []byte(b)
+	fw.ch <- StringWarp(b)
 	return len(b), nil
 }
 
@@ -63,6 +74,9 @@ func (fw *FileWriter) Reopen() error {
 }
 
 func NewFileWriter(filename string) *FileWriter {
+	return newFileWriter(filename, nil)
+}
+func newFileWriter(filename string, put *sync.Pool) *FileWriter {
 	bw, file, err := newBufWriter(filename)
 	if err != nil {
 		panic(fmt.Sprintf("newBufWriter err. %v", err))
@@ -72,10 +86,11 @@ func NewFileWriter(filename string) *FileWriter {
 		file:     file,
 		bw:       bw,
 		closed:   0,
-		ch:       make(chan []byte, DEF_CHAN_LEN),
+		ch:       make(chan Buffer, DEF_CHAN_LEN),
 		//quit:     make(chan struct{}),
-		quit:   make(chan chan error),
-		reopen: make(chan chan error),
+		quit:    make(chan chan error),
+		reopen:  make(chan chan error),
+		putpool: put,
 	}
 	syn := make(chan struct{})
 	go fw.loop(syn)
@@ -103,8 +118,11 @@ func (fw *FileWriter) loop(syn chan struct{}) {
 			//if !ok {
 			//	goto END_FOR
 			//}
-			if _, err := fw.bw.Write(d); err != nil {
+			if _, err := fw.bw.Write(d.Bytes()); err != nil {
 				fmt.Printf("LOGGO ERROR log file write err. %v\n", err)
+			}
+			if fw.putpool != nil {
+				fw.putpool.Put(d)
 			}
 		case quited := <-fw.quit:
 			var reterr error
@@ -112,7 +130,8 @@ func (fw *FileWriter) loop(syn chan struct{}) {
 			//fmt.Printf("quit lost %d\n", lost)
 			for i := 0; i < lost; i++ {
 				d := <-fw.ch
-				fw.bw.Write(d)
+				//fw.bw.Write(d)
+				fw.bw.Write(d.Bytes())
 			}
 			if err := fw.bw.Flush(); err != nil {
 				reterr = fmt.Errorf("LOGGO ERROR log file flush err. %v", err)

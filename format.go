@@ -5,7 +5,6 @@
 package loggo
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -16,7 +15,6 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-	"sync"
 )
 
 // TODO see Formatter interface in fmt/print.go
@@ -99,22 +97,11 @@ func getFmtVerbByName(name string) fmtVerb {
 type stringWriter interface {
 	io.Writer
 	WriteString(string) (int, error)
-	//WriteByte(c byte) error
 }
 
 // Formatter is the required interface for a custom log record formatter.
 type Formatter interface {
 	Format(calldepth int, r *Record, output stringWriter) error
-}
-
-func FormatterProxy(formatter Formatter, calldepth int, r *Record) []byte {
-	output := buffer_pool.Get().(*bytes.Buffer)
-	output.Reset()
-	formatter.Format(calldepth+1, r, output)
-	ret := append([]byte{}, output.Bytes()...)
-	buffer_pool.Put(output)
-	return ret
-	//return output.String()
 }
 
 var (
@@ -123,17 +110,6 @@ var (
 
 	// GlogFormatter mimics the glog format
 	GlogFormatter = MustStringFormatter("%{level:.1s}%{time:01-02T15:04:05.999999} %{pid}.%{gid} %{shortfile}] %{message}")
-
-	//builder_pool = sync.Pool{
-	//	New: func() interface{} {
-	//		return &strings.Builder{}
-	//	},
-	//}
-	buffer_pool = sync.Pool{
-		New: func() interface{} {
-			return &bytes.Buffer{}
-		},
-	}
 )
 
 var formatRe = regexp.MustCompile(`%{([a-z]+)(?::(.*?[^\\]))?}`)

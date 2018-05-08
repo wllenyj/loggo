@@ -14,7 +14,7 @@ type FileWriterManager struct {
 	m *sync.Map
 }
 
-func GetFileWriter(filename string) stringWriter {
+func GetFileWriter(filename string) BufferWriter {
 	path, err := filepath.Abs(filename)
 	if err != nil {
 		panic(err)
@@ -26,7 +26,7 @@ func (manager *FileWriterManager) getFileWriter(path string) *FileWriter {
 	value, ok := manager.m.Load(path)
 	var fw *FileWriter
 	if !ok {
-		fw = NewFileWriter(path)
+		fw = newFileWriter(path, buffer_pool)
 		manager.m.Store(path, fw)
 	} else {
 		fw = value.(*FileWriter)

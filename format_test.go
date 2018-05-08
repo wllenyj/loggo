@@ -26,12 +26,14 @@ func test4(format Formatter, record *Record) []byte {
 func test5(format Formatter, record *Record) []byte {
 	return test6(format, record)
 }
-func test6(format Formatter, record *Record) []byte{
-	return FormatterProxy(format, 0, record)
+func test6(format Formatter, record *Record) []byte {
+	output := &bytes.Buffer{}
+	format.Format(0, record, output)
+	return output.Bytes()
 }
 
 var (
-	aaa = "Hello,%s!"
+	aaa         = "Hello,%s!"
 	testTime, _ = time.Parse(time.RFC3339Nano, "2018-04-27T19:22:01.40731219+08:00")
 	testRecord  = []*Record{
 		&Record{DEBUG, 123, testTime, &aaa, []interface{}{"world"}},
@@ -51,7 +53,7 @@ var (
 func TestFormater(t *testing.T) {
 	t.Parallel()
 	result := test(formater, testRecord[0])
-	if string(result) != "04-27T19:22:01.407312 DEBUG format_test.go:30 test6 Hello,world!\n" {
+	if string(result) != "04-27T19:22:01.407312 DEBUG format_test.go:31 test6 Hello,world!\n" {
 		t.Fatalf("failt: %s", result)
 	}
 	t.Logf(string(result))
@@ -116,8 +118,8 @@ func TestParallel(t *testing.T) {
 	testfunc := func(t *testing.T) {
 		t.Parallel()
 		result := test(formater, testRecord[0])
-		if strings.Compare(string(result), "04-27T19:22:01.407312 DEBUG format_test.go:30 test6 Hello,world!\n") != 0{
-			t.Fatalf("failt: %x", result)
+		if strings.Compare(string(result), "04-27T19:22:01.407312 DEBUG format_test.go:31 test6 Hello,world!\n") != 0 {
+			t.Fatalf("failt: %s", result)
 		}
 	}
 	t.Run("group", func(t *testing.T) {

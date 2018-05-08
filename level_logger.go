@@ -1,17 +1,18 @@
 package loggo
 
 import (
-	"time"
 	"github.com/petermattis/goid"
 	"io"
+	"time"
+	"bytes"
 )
 
 type levelLogger struct {
 	level Flag
-	
-	formatter Formatter 
 
-	writer io.Writer
+	formatter Formatter
+
+	writer BufferWriter
 }
 
 func (lg *levelLogger) Debug(args ...interface{}) {
@@ -50,7 +51,7 @@ func (lg *levelLogger) Output(calldepth int, s string) error {
 	return nil
 }
 
-func (lg *levelLogger) log(level Flag, calldepth int, s *string, args ...interface{} ) {
+func (lg *levelLogger) log(level Flag, calldepth int, s *string, args ...interface{}) {
 	if lg.level < level {
 		return
 	}
@@ -62,32 +63,25 @@ func (lg *levelLogger) log(level Flag, calldepth int, s *string, args ...interfa
 	r.fmt = s
 	r.args = args
 
-	str := FormatterProxy(lg.formatter, calldepth+1, r)
+	output := buffer_pool.Get().(*bytes.Buffer)
+	output.Reset()
+	lg.formatter.Format(calldepth+1, r, output)
 	PutRecord(r)
-	lg.writer.Write(str)
+	//lg.writer.Write(str)
+	lg.writer.WriteBuffer(output)
 }
 
-//func (lg *levelLogger) SetFileWriter(filename string) {
-//	lg.writer = GetFileWriter(filename)
-//}
-//func (lg *levelLogger) SetFormatter(format string) {
-//	lg.formatter = MustStringFormatter(fmt)
-//}
-//func (lg *levelLogger) SetLevel(level Flag) {
-//	lg.level = level
-//}
-
 func NewLevelLogger(level Flag, w io.Writer, fmt string) LevelLogger {
-	return &levelLogger {
-		level: level,
-		writer: w,
+	return &levelLogger{
+		level:     level,
+		writer:    &BufferWriterWarp{w: w},
 		formatter: MustStringFormatter(fmt),
 	}
 }
 func NewFileLevelLogger(level Flag, filename string, fmt string) LevelLogger {
-	return &levelLogger {
-		level: level,
-		writer: GetFileWriter(filename),
+	return &levelLogger{
+		level:     level,
+		writer:    GetFileWriter(filename),
 		formatter: MustStringFormatter(fmt),
 	}
 }
